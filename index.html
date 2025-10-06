@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قطب‌نمای منابع خبری هوش مصنوعی</title>
+    <!-- تم: حالت تیره (Dark Mode) برای راحتی چشم -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #111827; /* پس‌زمینه تیره اصلی (Gray-900) */
+            color: #f3f4f6; /* متن روشن (Gray-100) */
+        }
+        .card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border: 1px solid #374151; /* حاشیه تیره (Gray-700) */
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            /* سایه تیره‌تر و مشخص‌تر در حالت تیره */
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.5), 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+        }
+        .filter-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        /* کلاس فعال برای دکمه فیلتر در تم تیره */
+        .filter-btn.active {
+            background-color: #0d9488; /* رنگ فیروزه‌ای فعال */
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        <header class="text-center mb-10">
+            <!-- تنظیم رنگ عنوان برای کنتراست بهتر در تم تیره -->
+            <h1 class="text-4xl md:text-5xl font-bold text-teal-400 mb-3">قطب‌نمای منابع خبری هوش مصنوعی</h1>
+            <!-- تنظیم رنگ پاراگراف برای تم تیره -->
+            <p class="text-lg text-gray-300 max-w-3xl mx-auto">
+                راهنمای تعاملی شما برای یافتن معتبرترین و تخصصی‌ترین منابع خبری در دنیای هوش مصنوعی. دسته‌بندی مورد نظر خود را برای شروع انتخاب کنید.
+            </p>
+        </header>
+
+        <section id="summary-chart" class="mb-12">
+             <div class="chart-container">
+                <canvas id="sourcesChart"></canvas>
+            </div>
+            <!-- تنظیم رنگ متن توضیحی نمودار برای تم تیره -->
+             <p class="text-center text-gray-400 mt-4 text-sm">نمودار توزیع انواع منابع خبری معرفی شده</p>
+        </section>
+
+        <section id="filters" class="mb-10">
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <!-- تنظیم رنگ دکمه‌های فیلتر برای تم تیره -->
+                <button class="filter-btn active py-2 px-5 bg-gray-800 border border-gray-700 rounded-full shadow-md text-gray-200" data-filter="all">همه دسته‌ها</button>
+                <button class="filter-btn py-2 px-5 bg-gray-800 border border-gray-700 rounded-full shadow-md text-gray-200" data-filter="research">تحقیقاتی و آکادمیک</button>
+                <button class="filter-btn py-2 px-5 bg-gray-800 border border-gray-700 rounded-full shadow-md text-gray-200" data-filter="industry">صنعت و کسب‌وکار</button>
+                <button class="filter-btn py-2 px-5 bg-gray-800 border border-gray-700 rounded-full shadow-md text-gray-200" data-filter="platform">پلتفرم‌های جامع</button>
+                <button class="filter-btn py-2 px-5 bg-gray-800 border border-gray-700 rounded-full shadow-md text-gray-200" data-filter="newsletter">خبرنامه‌ها</button>
+            </div>
+        </section>
+
+        <section id="sources-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <!-- Source cards will be injected here by JavaScript -->
+        </section>
+
+        <footer class="text-center mt-16 py-6 border-t border-gray-700">
+            <p class="text-gray-400 mb-2">طراحی و پیاده‌سازی شده بر اساس گزارش جامع منابع خبری هوش مصنوعی.</p>
+            <!-- متن جدید اضافه شده با استایل مناسب برای تم تیره -->
+            <p class="text-teal-400 font-bold text-lg">
+                طراحی شده توسط: سعیدپروانه @saeidparvaneh
+            </p>
+        </footer>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sourcesData = [
+                { name: 'وبلاگ OpenAI', category: 'research', tag: 'آزمایشگاه تحقیقاتی', description: 'منبع اصلی برای اطلاع از مدل‌های جدید (GPT, DALL-E)، مقالات تحقیقاتی و طرح‌های ایمنی OpenAI.', freq: 'رویداد محور', link: 'https://openai.com/blog/' },
+                { name: 'وبلاگ Google DeepMind', category: 'research', tag: 'آزمایشگاه تحقیقاتی', description: 'آخرین پیشرفت‌ها، مدل‌های جدید (Gemini) و کاربردهای هوش مصنوعی در علوم مختلف از آزمایشگاه DeepMind.', freq: 'رویداد محور', link: 'https://deepmind.google/blog/' },
+                { name: 'وبلاگ Google AI', category: 'research', tag: 'آزمایشگاه تحقیقاتی', description: 'پوشش طرح‌های گسترده هوش مصنوعی در گوگل، از جمله کاربرد در محصولات و ابزارهای جدید برای توسعه‌دهندگان.', freq: 'منظم', link: 'https://ai.google/blog/' },
+                { name: 'MIT News (بخش هوش مصنوعی)', category: 'research', tag: 'دانشگاهی', description: 'پوشش اکتشافات، نوآوری‌ها و دستاوردهای اساتید و دانشجویان MIT در حوزه هوش مصنوعی.', freq: 'روزانه/منظم', link: 'https://news.mit.edu/topic/ai' },
+                { name: 'ScienceDaily (بخش هوش مصنوعی)', category: 'research', tag: 'دانشگاهی', description: 'خلاصه آخرین مقالات و تحقیقات هوش مصنوعی از دانشگاه‌ها و موسسات تحقیقاتی سراسر جهان.', freq: 'روزانه', link: 'https://www.sciencedaily.com/news/computers_math/artificial_intelligence/' },
+                { name: 'arXiv.org (بخش‌های AI)', category: 'research', tag: 'مخزن مقالات', description: 'مخزن دسترسی آزاد مقالات علمی که بسیاری از پیشرفت‌های هوش مصنوعی برای اولین بار در آن منتشر می‌شوند.', freq: 'روزانه', link: 'https://arxiv.org/corr/home' },
+                { name: 'Semantic Scholar', category: 'research', tag: 'ابزار تحقیق', description: 'موتور جستجوی علمی مبتنی بر هوش مصنوعی برای کشف و درک مقالات با تحلیل استنادات و خلاصه‌های هوشمند.', freq: 'مداوم', link: 'https://www.semanticscholar.org/' },
+                { name: 'AI Trends', category: 'industry', tag: 'اخبار صنعت', description: 'پوشش آخرین اخبار، رویدادها و نظرات در هوش مصنوعی با تمرکز بر کاربردهای صنعتی، اخلاق و سیاست‌گذاری.', freq: 'روزانه', link: 'https://aitrends.com/' },
+                { name: 'Emerj AI Research', category: 'industry', tag: 'تحلیل بازار', description: 'تحقیقات بازار و بینش‌های کاربردی هوش مصنوعی در بخش‌های مختلف مانند بهداشت، مالی و خرده‌فروشی.', freq: 'منظم', link: 'https://emerj.com/' },
+                { name: 'AI Business', category: 'industry', tag: 'کسب‌وکار', description: 'تمرکز بر تأثیر هوش مصنوعی بر کسب‌وکار، از جمله هوش مصنوعی مولد، مدل‌های زبان بزرگ، و مقررات.', freq: 'روزانه', link: 'https://aibusiness.com/' },
+                { name: 'AI Magazine', category: 'platform', tag: 'نشریه علمی', description: 'نشریه رسمی انجمن پیشرفت هوش مصنوعی (AAAI) با مقالات، مصاحبه‌ها و بررسی‌های عمیق.', freq: 'فصلی', link: 'https://aaai.org/magazine/' },
+                { name: 'Analytics Vidhya', category: 'platform', tag: 'جامعه یادگیری', description: 'یک پلتفرم بزرگ برای یادگیری علم داده و هوش مصنوعی که بخش خبری اختصاصی نیز دارد.', freq: 'منظم', link: 'https://www.analyticsvidhya.com/blog/' },
+                { name: 'The Rundown', category: 'newsletter', tag: 'خبرنامه روزانه', description: 'به‌روزرسانی‌های روزانه در مورد آخرین تحولات هوش مصنوعی، پروژه‌های پرطرفدار، ابزارها و آموزش‌ها.', freq: 'روزانه', link: '#' },
+                { name: 'TLDR AI', category: 'newsletter', tag: 'خبرنامه روزانه', description: 'تبدیل اخبار پیچیده صنعت و مقالات دانشگاهی به خلاصه‌های کوتاه و قابل فهم برای متخصصان.', freq: 'روزانه', link: '#' },
+                { name: 'The Neuron', category: 'newsletter', tag: 'خبرنامه روزانه', description: 'اخبار به‌روز، تحلیل‌های دقیق صنعت، ابزارهای برتر و کمی طنز برای جذاب کردن هوش مصنوعی.', freq: 'روزانه', link: '#' },
+                { name: 'AI Breakfast', category: 'newsletter', tag: 'خبرنامه هفتگی', description: 'گردآوری آخرین اخبار هوش مصنوعی در یک ایمیل قابل هضم با تمرکز بر داستان‌های خبری و مقالات مرتبط.', freq: '۳ بار در هفته', link: '#' },
+                { name: 'Ben\'s Bites', category: 'newsletter', tag: 'خبرنامه غیرفنی', description: 'گردآوری آخرین روندها و اخبار صنعت با بررسی‌های عمیق هفتگی در مورد موارد استفاده تجاری.', freq: 'روزانه', link: '#' }
+            ];
+
+            const grid = document.getElementById('sources-grid');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+
+            function renderCards(filter = 'all') {
+                grid.innerHTML = '';
+                const filteredData = filter === 'all' 
+                    ? sourcesData 
+                    : sourcesData.filter(source => source.category === filter);
+
+                filteredData.forEach(source => {
+                    const card = document.createElement('article');
+                    // به‌روزرسانی کارت‌ها برای تم تیره: پس‌زمینه خاکستری تیره و سایه مشخص
+                    card.className = 'card bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col';
+                    card.setAttribute('data-category', source.category);
+                    
+                    // تنظیم رنگ تگ‌ها برای تم تیره (استفاده از رنگ‌های روشن‌تر برای متن و پس‌زمینه تیره)
+                    const tagColor = {
+                        research: 'bg-blue-900/50 text-blue-300',
+                        industry: 'bg-green-900/50 text-green-300',
+                        platform: 'bg-purple-900/50 text-purple-300',
+                        newsletter: 'bg-orange-900/50 text-orange-300'
+                    }[source.category];
+
+                    card.innerHTML = `
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start mb-3">
+                                <!-- رنگ عنوان روشن -->
+                                <h3 class="text-xl font-bold text-white">${source.name}</h3>
+                                <span class="tag ${tagColor}">${{research:'تحقیقاتی', industry:'صنعت', platform:'پلتفرم', newsletter:'خبرنامه'}[source.category]}</span>
+                            </div>
+                            <!-- رنگ توضیحات روشن -->
+                            <p class="text-gray-300 mb-4">${source.description}</p>
+                        </div>
+                        <div class="mt-auto pt-4 border-t border-gray-700 flex justify-between items-center">
+                            <!-- رنگ لینک خوب است -->
+                            <a href="${source.link}" target="_blank" rel="noopener noreferrer" class="text-teal-400 font-semibold hover:text-teal-300">
+                                مشاهده وب‌سایت &larr;
+                            </a>
+                            <!-- رنگ متن تناوب روشن -->
+                            <span class="text-sm text-gray-400">تناوب: ${source.freq}</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    renderCards(btn.dataset.filter);
+                });
+            });
+
+            function renderChart() {
+                const ctx = document.getElementById('sourcesChart').getContext('2d');
+                const categoryCounts = sourcesData.reduce((acc, source) => {
+                    acc[source.category] = (acc[source.category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const labels = {
+                    'research': 'تحقیقاتی و آکادمیک',
+                    'industry': 'صنعت و کسب‌وکار',
+                    'platform': 'پلتفرم‌های جامع',
+                    'newsletter': 'خبرنامه‌ها'
+                };
+                
+                const chartData = {
+                    labels: Object.keys(categoryCounts).map(key => labels[key]),
+                    datasets: [{
+                        label: 'تعداد منابع در هر دسته',
+                        data: Object.values(categoryCounts),
+                        // رنگ‌های میله‌ها می‌توانند ثابت بمانند
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)', // آبی
+                            'rgba(16, 185, 129, 0.7)', // سبز
+                            'rgba(168, 85, 247, 0.7)', // بنفش
+                            'rgba(249, 115, 22, 0.7)' // نارنجی
+                        ],
+                        borderColor: [
+                            'rgba(59, 130, 246, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(168, 85, 247, 1)',
+                            'rgba(249, 115, 22, 1)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                };
+
+                // تعریف رنگ‌های روشن برای محورها و شبکه‌بندی نمودار در تم تیره
+                const axisColor = '#9ca3af'; // Gray-400
+                const gridColor = 'rgba(75, 85, 99, 0.5)'; // Gray-600 شفاف
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                rtl: true,
+                                textDirection: 'rtl',
+                                bodyFont: {
+                                    family: 'Vazirmatn'
+                                },
+                                titleFont: {
+                                    family: 'Vazirmatn'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    font: { family: 'Vazirmatn', color: axisColor } // رنگ تیک‌های محور افقی
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    color: gridColor // رنگ شبکه‌بندی محور عمودی
+                                },
+                                ticks: {
+                                    font: { family: 'Vazirmatn', size: 14, color: axisColor } // رنگ تیک‌های محور عمودی
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderCards();
+            renderChart();
+        });
+    </script>
+
+</body>
+</html>
+
